@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "properties": {
+    "filename": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "string",
+      "enum": [
+        "docx",
+        "pdf"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "uploaded",
+        "analyzing",
+        "report_ready",
+        "fixed"
+      ],
+      "default": "uploaded"
+    },
+    "report": {
+      "type": "object"
+    },
+    "fixed_file_url": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "name": "ManuscriptSubmission"
+}
