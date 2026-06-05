@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMS Manuscript Checker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+    .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; }
+    .drop-zone.dragover { border-color: #3b82f6; background: #eff6ff; }
+    .check-pass { background: #f0fdf4; border-left: 4px solid #22c55e; }
+    .check-fail { background: #fef2f2; border-left: 4px solid #ef4444; }
+    .check-warning { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .check-na { background: #f8fafc; border-left: 4px solid #94a3b8; }
+    .pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 px-6 py-4">
+    <div class="max-w-4xl mx-auto flex items-center gap-3">
+      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+        <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-slate-800">AMS Manuscript Checker</h1>
+        <p class="text-xs text-slate-500">American Meteorological Society formatting compliance</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-6 py-10">
+
+    <!-- Upload Section -->
+    <div id="upload-section">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">Check Your Manuscript</h2>
+        <p class="text-slate-500">Upload your manuscript and we'll check it against all AMS formatting requirements. Your file is processed securely and never used for AI training.</p>
+      </div>
+
+      <!-- Unified upload zone — clickable AND droppable -->
+      <div id="drop-zone" class="drop-zone rounded-2xl p-12 text-center bg-white transition-all cursor-pointer relative">
+        <input type="file" id="file-input" accept=".docx,.pdf"
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+        <div class="flex flex-col items-center gap-4 pointer-events-none">
+          <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+            <svg width="32" height="32" fill="none" stroke="#3b82f6" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div>
+            <p class="text-lg font-semibold text-slate-700">Drop your manuscript here</p>
+            <p class="text-slate-400 text-sm mt-1">or <span class="text-blue-600 font-medium">click to browse</span></p>
+          </div>
+          <p class="text-xs text-slate-400">Supported formats: .docx, .pdf &nbsp;·&nbsp; Max 25MB</p>
+        </div>
+      </div>
+
+      <div id="file-selected" class="hidden mt-4 bg-white rounded-xl p-4 border border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+            <svg width="20" height="20" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <p id="file-name" class="font-medium text-slate-700 text-sm"></p>
+            <p id="file-size" class="text-xs text-slate-400"></p>
+          </div>
+        </div>
+        <button onclick="clearFile()" class="text-slate-400 hover:text-red-500 transition-colors">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="mt-6 flex justify-center">
+        <button id="analyze-btn" onclick="analyzeManuscript()" disabled
+          class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors">
+          Analyze Manuscript
+        </button>
+      </div>
+
+      <!-- Privacy Disclosure Panel -->
+      <div class="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-5 text-sm text-slate-600">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-0.5">
+            <svg width="18" height="18" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">Privacy &amp; Data Use</p>
+            <p class="mb-2">Your manuscript is sent to <strong>Anthropic's Claude API</strong> for analysis. Anthropic's Privacy Center explicitly states: <em>"By default, we will not use your inputs or outputs from our commercial products (e.g. Claude for Work, Anthropic API) to train our models."</em> This guarantee applies to API usage and is distinct from consumer products such as Claude.ai, where different terms apply.</p>
+            <p class="mb-2">On our end, your file is processed <strong>in memory only</strong> and is never written to a database or permanent storage. Only the compliance report (not your manuscript text) is retained.</p>
+            <div class="flex flex-wrap gap-4 mt-3 text-xs text-slate-500">
+              <a href="https://privacy.anthropic.com/en/articles/7996868-is-my-data-used-for-model-training" target="_blank" rel="noopener noreferrer"
+                class="flex items-center gap-1 text-blue-600 hover:underline">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Anthropic: Is my data used for model training?
+              </a>
+              <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer"
+                class="flex items-center gap-1 text-blue-600 hover:underline">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Anthropic Privacy Policy
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Section -->
+    <div id="loading-section" class="hidden text-center py-20">
+      <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 pulse">
+        <svg width="32" height="32" fill="none" stroke="#3b82f6" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-2">Analyzing your manuscript…</h3>
+      <p class="text-slate-500" id="loading-message">Checking against all 30+ AMS formatting requirements</p>
+      <div class="mt-6 bg-white rounded-xl p-4 border border-slate-200 max-w-sm mx-auto">
+        <div id="loading-steps" class="text-left space-y-2 text-sm text-slate-600">
+          <div class="flex items-center gap-2"><span class="pulse">⏳</span> Reading document structure…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Section -->
+    <div id="report-section" class="hidden">
+
+      <!-- Summary Banner -->
+      <div id="summary-banner" class="rounded-2xl p-6 mb-6 text-white">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span id="summary-icon" class="text-2xl"></span>
+              <h2 id="summary-title" class="text-xl font-bold"></h2>
+            </div>
+            <p id="summary-text" class="opacity-90 text-sm"></p>
+          </div>
+          <div class="text-right">
+            <div class="text-3xl font-bold" id="score-display"></div>
+            <div class="text-sm opacity-75">checks passed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Word Counts -->
+      <div class="mb-2">
+        <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wide">Word Counts</h3>
+      </div>
+      <div id="word-counts" class="grid grid-cols-3 gap-4 mb-6"></div>
+
+      <!-- Extracted Abstract Text -->
+      <div id="extracted-abstract" class="hidden mb-6">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Abstract Text Counted</span>
+            <span class="text-xs text-slate-400">(verbatim, line numbers excluded)</span>
+          </div>
+          <p id="extracted-abstract-text" class="text-sm text-slate-700 leading-relaxed italic"></p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="action-buttons" class="bg-white rounded-2xl p-6 border border-slate-200 mb-6">
+        <h3 class="font-semibold text-slate-800 mb-1">What would you like to do?</h3>
+        <p class="text-sm text-slate-500 mb-4">Choose how to address the issues found in your manuscript.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button onclick="fixDocument()" id="fix-btn"
+            class="flex items-center gap-3 p-4 rounded-xl border-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 transition-all text-left">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div>
+              <div class="font-semibold text-blue-700">Auto-fix & Download</div>
+              <div class="text-xs text-blue-500">Fix all auto-correctable issues and download a corrected .docx</div>
+            </div>
+          </button>
+          <button onclick="showHighlights()"
+            class="flex items-center gap-3 p-4 rounded-xl border-2 border-amber-200 bg-amber-50 hover:border-amber-400 hover:bg-amber-100 transition-all text-left">
+            <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <div>
+              <div class="font-semibold text-amber-700">View Highlighted Issues</div>
+              <div class="text-xs text-amber-500">See all issues highlighted with details for manual correction</div>
+            </div>
+          </button>
+        </div>
+        <p id="pdf-note" class="hidden text-xs text-slate-400 mt-3">⚠️ Auto-fix is only available for .docx files. For PDFs, use the highlighted issues view.</p>
+      </div>
+
+      <!-- Fix Loading -->
+      <div id="fix-loading" class="hidden bg-white rounded-2xl p-8 border border-slate-200 mb-6 text-center">
+        <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 pulse">
+          <svg width="24" height="24" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </div>
+        <p class="font-semibold text-slate-700">Applying fixes to your manuscript…</p>
+        <p class="text-sm text-slate-400 mt-1">This may take a moment</p>
+      </div>
+
+      <!-- Download Ready -->
+      <div id="download-ready" class="hidden bg-green-50 border border-green-200 rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+            <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div>
+            <div class="font-semibold text-green-800">Fixed manuscript ready!</div>
+            <div class="text-sm text-green-600" id="fixes-applied-text"></div>
+          </div>
+        </div>
+        <a id="download-link" href="#" download
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-sm">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Fixed Manuscript
+        </a>
+      </div>
+
+      <!-- Detailed Report -->
+      <div id="detailed-report" class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="font-bold text-slate-800 text-lg">Detailed Report</h3>
+          <div class="flex gap-2 text-xs">
+            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium" id="pass-count"></span>
+            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium" id="fail-count"></span>
+            <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-medium" id="warn-count"></span>
+          </div>
+        </div>
+        <div id="checks-list" class="divide-y divide-slate-100"></div>
+      </div>
+
+      <!-- Start Over -->
+      <div class="mt-6 text-center">
+        <button onclick="resetApp()" class="text-sm text-slate-400 hover:text-slate-600 underline">Check another manuscript</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const APP_ID = '6a025b0b8998a3926a7188b1';
+    const BASE_URL = `https://base44.app/api/apps/${APP_ID}`;
+
+    function show(id) { var el = document.getElementById(id); if (el) { el.classList.remove('hidden'); el.style.display = ''; } }
+    function hide(id) { var el = document.getElementById(id); if (el) { el.classList.add('hidden'); el.style.display = 'none'; } }
+
+    let selectedFile = null;
+    let submissionId = null;
+    let currentReport = null;
+    let currentFileType = null;
+
+    // --- Drag & Drop ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wire up file input change event
+      var fileInput = document.getElementById('file-input');
+      if (fileInput) {
+        fileInput.addEventListener('change', function() {
+          var file = this.files && this.files[0];
+          if (file) handleFileSelect(file);
+        });
+      }
+
+      // Drag and drop on drop zone
+      var dropZone = document.getElementById('drop-zone');
+      if (dropZone) {
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+        dropZone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          dropZone.classList.remove('dragover');
+          var file = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (file) handleFileSelect(file);
+        });
+      }
+    });
+
+    function handleFileSelect(file) {
+      if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['docx', 'pdf'].includes(ext)) {
+        alert('Please upload a .docx or .pdf file.');
+        return;
+      }
+      if (file.size > 25 * 1024 * 1024) {
+        alert('File is too large. Maximum size is 25MB.');
+        return;
+      }
+      selectedFile = file;
+      document.getElementById('file-name').textContent = file.name;
+      document.getElementById('file-size').textContent = (file.size / 1024).toFixed(1) + ' KB';
+      document.getElementById('file-selected').classList.remove('hidden');
+      document.getElementById('analyze-btn').disabled = false;
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      document.getElementById('file-selected').classList.add('hidden');
+      document.getElementById('analyze-btn').disabled = true;
+      document.getElementById('file-input').value = '';
+    }
+
+    async function analyzeManuscript() {
+      if (!selectedFile) return;
+      show('loading-section'); hide('upload-section'); hide('report-section');
+
+      // Update loading messages over time so user knows it's working
+      var messages = [
+        'Reading document structure…',
+        'Checking formatting requirements…',
+        'Analyzing section order and structure…',
+        'Counting words and checking lengths…',
+        'Reviewing citations and references…',
+        'Almost done — generating your report…'
+      ];
+      var msgIndex = 0;
+      var msgInterval = setInterval(function() {
+        msgIndex = (msgIndex + 1) % messages.length;
+        var el = document.getElementById('loading-message');
+        if (el) el.textContent = messages[msgIndex];
+      }, 8000);
+
+      try {
+        var formData = new FormData();
+        formData.append('file', selectedFile);
+
+        // Use AbortController with 3-minute timeout
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 180000);
+
+        var analyzeRes = await fetch(`${BASE_URL}/functions/analyzeManuscript`, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!analyzeRes.ok) {
+          var errText = await analyzeRes.text();
+          throw new Error('Analysis failed: ' + errText);
+        }
+        var result = await analyzeRes.json();
+        if (result.report) showReport(result.report);
+        else throw new Error(result.error || 'No report returned');
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          alert('The analysis timed out. Please try again — large files can take up to 2 minutes.');
+        } else {
+          alert('Error: ' + err.message);
+        }
+        show('upload-section'); hide('loading-section');
+      } finally {
+        clearInterval(msgInterval);
+      }
+    }
+
+    function showReport(report) {
+      currentReport = report;
+      hide('loading-section');
+      hide('upload-section');
+      show('report-section');
+      renderReport(report);
+    }
+
+    function renderReport(report) {
+      const checks = report.checks || [];
+      const passed = checks.filter(c => c.status === 'pass').length;
+      const failed = checks.filter(c => c.status === 'fail').length;
+      const warned = checks.filter(c => c.status === 'warning').length;
+      const total = checks.length;
+
+      // Summary banner
+      const banner = document.getElementById('summary-banner');
+      const isPass = report.overall_status === 'pass';
+      banner.className = `rounded-2xl p-6 mb-6 text-white ${isPass ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-red-500 to-rose-600'}`;
+      document.getElementById('summary-icon').textContent = isPass ? '✅' : '❌';
+      document.getElementById('summary-title').textContent = isPass ? 'Manuscript Passes AMS Requirements' : 'Manuscript Has Compliance Issues';
+      document.getElementById('summary-text').textContent = report.summary;
+      document.getElementById('score-display').textContent = `${passed}/${total}`;
+
+      // Word counts
+      const wc = report.word_counts || {};
+      const wcEl = document.getElementById('word-counts');
+      wcEl.innerHTML = [
+        { label: 'Abstract', value: wc.abstract, limit: 250 },
+        { label: 'Significance Statement', value: wc.significance_statement, limit: 120 },
+        { label: 'Body Text', value: wc.body_text, limit: 7500 }
+      ].map(item => {
+        if (item.value === null || item.value === undefined) return `
+          <div class="bg-white rounded-xl p-4 border border-slate-200 text-center">
+            <div class="text-2xl font-bold text-slate-300">—</div>
+            <div class="text-xs text-slate-400 mt-1">${item.label}</div>
+          </div>`;
+        const over = item.value > item.limit;
+        return `
+          <div class="bg-white rounded-xl p-4 border ${over ? 'border-red-200' : 'border-slate-200'} text-center">
+            <div class="text-2xl font-bold ${over ? 'text-red-600' : 'text-slate-800'}">${item.value.toLocaleString()}</div>
+            <div class="text-xs text-slate-400 mt-1">${item.label}</div>
+            <div class="text-xs ${over ? 'text-red-500 font-medium' : 'text-slate-300'} mt-0.5">limit: ${item.limit.toLocaleString()}</div>
+          </div>`;
+      }).join('');
+
+      // Abstract text (PDF only — show what was counted)
+      const extractedEl = document.getElementById('extracted-abstract');
+      const et = report.extracted_text || {};
+      if (et.abstract) {
+        document.getElementById('extracted-abstract-text').textContent = et.abstract;
+        extractedEl.classList.remove('hidden');
+      } else {
+        extractedEl.classList.add('hidden');
+      }
+
+      // PDF note
+      if (currentFileType === 'pdf') {
+        document.getElementById('pdf-note').classList.remove('hidden');
+        document.getElementById('fix-btn').disabled = true;
+        document.getElementById('fix-btn').classList.add('opacity-40', 'cursor-not-allowed');
+      }
+
+      // Counts
+      document.getElementById('pass-count').textContent = `${passed} passed`;
+      document.getElementById('fail-count').textContent = `${failed} failed`;
+      document.getElementById('warn-count').textContent = `${warned} warnings`;
+
+      // Group checks by category
+      const categories = {};
+      checks.forEach(c => {
+        if (!categories[c.category]) categories[c.category] = [];
+        categories[c.category].push(c);
+      });
+
+      const checksList = document.getElementById('checks-list');
+      checksList.innerHTML = '';
+
+      Object.entries(categories).forEach(([cat, catChecks]) => {
+        const section = document.createElement('div');
+        section.innerHTML = `<div class="px-6 py-3 bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider">${cat}</div>`;
+        checksList.appendChild(section);
+
+        catChecks.forEach(check => {
+          const el = document.createElement('div');
+          const statusClass = { pass: 'check-pass', fail: 'check-fail', warning: 'check-warning', not_applicable: 'check-na' }[check.status] || 'check-na';
+          const statusIcon = { pass: '✅', fail: '❌', warning: '⚠️', not_applicable: '—' }[check.status];
+          const fixBadge = check.fixable && check.status === 'fail' ? '<span class="ml-2 text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">Auto-fixable</span>' : '';
+
+          el.className = `px-6 py-4 ${statusClass}`;
+          el.innerHTML = `
+            <div class="flex items-start gap-3">
+              <span class="text-lg flex-shrink-0 mt-0.5">${statusIcon}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center flex-wrap gap-1">
+                  <span class="font-medium text-slate-800 text-sm">${check.requirement}</span>
+                  ${fixBadge}
+                </div>
+                <p class="text-xs text-slate-600 mt-1">${check.details}</p>
+                ${check.fix_description && check.status === 'fail' ? `<p class="text-xs text-blue-600 mt-1">🔧 Fix: ${check.fix_description}</p>` : ''}
+              </div>
+            </div>
+          `;
+          checksList.appendChild(el);
+        });
+      });
+    }
+
+    async function fixDocument() {
+      if (!selectedFile || !currentReport) {
+        alert('Please analyze a manuscript first.');
+        return;
+      }
+      if (!selectedFile.name.toLowerCase().endsWith('.docx')) {
+        alert('Auto-fix is only available for .docx files. Please use the highlighted issues view for PDFs.');
+        return;
+      }
+
+      document.getElementById('action-buttons').classList.add('hidden');
+      document.getElementById('fix-loading').classList.remove('hidden');
+
+      try {
+        var formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('report', JSON.stringify(currentReport));
+
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 180000);
+
+        var res = await fetch(`${BASE_URL}/functions/fixManuscript`, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        var data = await res.json();
+        document.getElementById('fix-loading').classList.add('hidden');
+
+        if (data.fixed_file_b64 || data.fixed_file_url) {
+          if (data.fixed_file_b64) {
+            // Decode base64 and trigger download directly
+            var byteChars = atob(data.fixed_file_b64);
+            var byteArr = new Uint8Array(byteChars.length);
+            for (var i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+            var blob = new Blob([byteArr], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            var blobUrl = URL.createObjectURL(blob);
+            document.getElementById('download-link').href = blobUrl;
+            document.getElementById('download-link').download = (selectedFile ? selectedFile.name.replace(/\.docx$/i, '_fixed.docx') : 'manuscript_fixed.docx');
+          } else {
+            document.getElementById('download-link').href = data.fixed_file_url;
+          }
+          document.getElementById('fixes-applied-text').textContent = `${data.fixes_applied} issue${data.fixes_applied !== 1 ? 's' : ''} fixed automatically`;
+          document.getElementById('download-ready').classList.remove('hidden');
+        } else {
+          alert(data.message || 'Could not generate fixed file. Please use the highlighted issues view for manual correction.');
+          document.getElementById('action-buttons').classList.remove('hidden');
+        }
+      } catch (err) {
+        document.getElementById('fix-loading').classList.add('hidden');
+        document.getElementById('action-buttons').classList.remove('hidden');
+        if (err.name === 'AbortError') {
+          alert('Fix timed out. Please try again.');
+        } else {
+          alert('Fix failed: ' + err.message);
+        }
+      }
+    }
+
+    function showHighlights() {
+      // Scroll to detailed report and highlight failed items
+      document.getElementById('detailed-report').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Flash failed items
+      document.querySelectorAll('.check-fail').forEach(el => {
+        el.style.transition = 'all 0.3s';
+        el.style.transform = 'scale(1.01)';
+        setTimeout(() => { el.style.transform = ''; }, 400);
+      });
+    }
+
+    function resetApp() {
+      selectedFile = null;
+      submissionId = null;
+      currentReport = null;
+      currentFileType = null;
+
+      document.getElementById('report-section').classList.add('hidden');
+      document.getElementById('loading-section').classList.add('hidden');
+      document.getElementById('upload-section').classList.remove('hidden');
+      document.getElementById('file-selected').classList.add('hidden');
+      document.getElementById('analyze-btn').disabled = true;
+      document.getElementById('file-input').value = '';
+      document.getElementById('action-buttons').classList.remove('hidden');
+      document.getElementById('fix-loading').classList.add('hidden');
+      document.getElementById('download-ready').classList.add('hidden');
+      document.getElementById('pdf-note').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
