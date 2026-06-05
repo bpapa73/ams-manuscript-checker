@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1620" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <rect width="980" height="1620" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="490" y="32" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f172a">AMS Manuscript Checker — Process Flowchart (Updated May 29, 2026)</text>
+
+  <!-- STEP 1: Upload -->
+  <rect x="330" y="50" width="320" height="52" rx="26" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="490" y="72" text-anchor="middle" font-size="13" font-weight="bold" fill="white">STEP 1: User Uploads File</text>
+  <text x="490" y="91" text-anchor="middle" font-size="11" fill="#bfdbfe">.pdf or .docx — drag-drop or browse — no auth required</text>
+
+  <line x1="490" y1="102" x2="490" y2="128" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- STEP 2: File Type Detection -->
+  <polygon points="490,128 660,166 490,204 320,166" fill="#f59e0b" stroke="#d97706" stroke-width="2"/>
+  <text x="490" y="162" text-anchor="middle" font-size="13" font-weight="bold" fill="white">File Type?</text>
+  <text x="490" y="179" text-anchor="middle" font-size="11" fill="#fef3c7">Check filename extension</text>
+
+  <!-- .docx branch left -->
+  <line x1="320" y1="166" x2="175" y2="166" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="247" y="158" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f172a">.docx</text>
+
+  <!-- .pdf branch right -->
+  <line x1="660" y1="166" x2="805" y2="166" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="733" y="158" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f172a">.pdf</text>
+
+  <!-- ===== DOCX COLUMN (left) ===== -->
+
+  <!-- 3a: Plain Text Extraction -->
+  <rect x="50" y="192" width="250" height="68" rx="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+  <text x="175" y="213" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 3a: Plain Text Extraction</text>
+  <text x="175" y="229" text-anchor="middle" font-size="10" fill="#d1fae5">JSZip decompresses .docx in memory</text>
+  <text x="175" y="244" text-anchor="middle" font-size="10" fill="#d1fae5">word/document.xml → clean plain text</text>
+  <text x="175" y="259" text-anchor="middle" font-size="10" fill="#fef08a">⚙ Non-AI</text>
+  <line x1="175" y1="260" x2="175" y2="288" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 4a: XML Metadata Extraction -->
+  <rect x="50" y="288" width="250" height="98" rx="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+  <text x="175" y="308" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 4a: XML Metadata Extraction</text>
+  <text x="175" y="324" text-anchor="middle" font-size="10" fill="#d1fae5">styles.xml → font size, line spacing</text>
+  <text x="175" y="339" text-anchor="middle" font-size="10" fill="#d1fae5">settings.xml → line numbering</text>
+  <text x="175" y="354" text-anchor="middle" font-size="10" fill="#d1fae5">document.xml → margins, page #, table shading,</text>
+  <text x="175" y="369" text-anchor="middle" font-size="10" fill="#d1fae5">wrapping, font color, para spacing</text>
+  <text x="175" y="384" text-anchor="middle" font-size="10" fill="#fef08a">⚙ Non-AI (JSZip + Regex)</text>
+  <line x1="175" y1="386" x2="175" y2="414" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 5a: Plain Text Deterministic Analysis -->
+  <rect x="50" y="414" width="250" height="118" rx="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+  <text x="175" y="433" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 5a: Text Analysis</text>
+  <text x="175" y="449" text-anchor="middle" font-size="10" fill="#d1fae5">extractSection() → abstract, sig, body text</text>
+  <text x="175" y="464" text-anchor="middle" font-size="10" fill="#d1fae5">countWords() → word counts (all 3 sections)</text>
+  <text x="175" y="479" text-anchor="middle" font-size="10" fill="#d1fae5">Section presence: ABSTRACT, SIG STMT,</text>
+  <text x="175" y="494" text-anchor="middle" font-size="10" fill="#d1fae5">DATA AVAIL, REFS, APPENDIX</text>
+  <text x="175" y="509" text-anchor="middle" font-size="10" fill="#d1fae5">Table/Fig citation order + appendix fig labels</text>
+  <text x="175" y="524" text-anchor="middle" font-size="10" fill="#fef08a">⚙ Non-AI (Regex + Logic)</text>
+  <line x1="175" y1="532" x2="175" y2="560" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 6a: Claude Analysis -->
+  <rect x="50" y="560" width="250" height="98" rx="8" fill="#8b5cf6" stroke="#7c3aed" stroke-width="2"/>
+  <text x="175" y="580" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 6a: Claude Analysis</text>
+  <text x="175" y="596" text-anchor="middle" font-size="10" fill="#ede9fe">30+ metadata facts + full plain text</text>
+  <text x="175" y="611" text-anchor="middle" font-size="10" fill="#ede9fe">+ AMS rules sent to Claude claude-opus-4-5</text>
+  <text x="175" y="626" text-anchor="middle" font-size="10" fill="#fef08a">🤖 AI (Claude claude-opus-4-5)</text>
+  <text x="175" y="641" text-anchor="middle" font-size="9" fill="#c4b5fd">Claude evaluates: citations, ref order,</text>
+  <text x="175" y="654" text-anchor="middle" font-size="9" fill="#c4b5fd">captions, ack content, section order</text>
+  <line x1="175" y1="658" x2="175" y2="686" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 7a: Deterministic Override -->
+  <rect x="50" y="686" width="250" height="88" rx="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+  <text x="175" y="706" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 7a: Deterministic Override</text>
+  <text x="175" y="722" text-anchor="middle" font-size="10" fill="#d1fae5">enforceChecks() → guarantees 30 items</text>
+  <text x="175" y="737" text-anchor="middle" font-size="10" fill="#d1fae5">applyDocxOverrides() → overwrites 12 checks</text>
+  <text x="175" y="752" text-anchor="middle" font-size="10" fill="#d1fae5">with server-computed values</text>
+  <text x="175" y="767" text-anchor="middle" font-size="10" fill="#fef08a">⚙ Non-AI — AI results discarded for 12 checks</text>
+
+  <!-- ===== PDF COLUMN (right) ===== -->
+
+  <!-- 3b: Base64 Encode -->
+  <rect x="680" y="192" width="250" height="68" rx="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+  <text x="805" y="213" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 3b: Base64 Encode PDF</text>
+  <text x="805" y="229" text-anchor="middle" font-size="10" fill="#d1fae5">PDF bytes encoded server-side</text>
+  <text x="805" y="244" text-anchor="middle" font-size="10" fill="#d1fae5">prepared as native document block</text>
+  <text x="805" y="259" text-anchor="middle" font-size="10" fill="#fef08a">⚙ Non-AI</text>
+  <line x1="805" y1="260" x2="805" y2="288" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 4b: Claude Analysis -->
+  <rect x="680" y="288" width="250" height="108" rx="8" fill="#8b5cf6" stroke="#7c3aed" stroke-width="2"/>
+  <text x="805" y="308" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 4b: Claude Analysis</text>
+  <text x="805" y="324" text-anchor="middle" font-size="10" fill="#ede9fe">PDF + AMS rules sent to Claude</text>
+  <text x="805" y="339" text-anchor="middle" font-size="10" fill="#ede9fe">Claude reads PDF natively</text>
+  <text x="805" y="354" text-anchor="middle" font-size="10" fill="#fef08a">🤖 AI (Claude claude-opus-4-5)</text>
+  <text x="805" y="369" text-anchor="middle" font-size="9" fill="#c4b5fd">Returns: 30 checks + word_counts</text>
+  <text x="805" y="382" text-anchor="middle" font-size="9" fill="#c4b5fd">+ extracted_text (abstract, sig stmt prose)</text>
+  <text x="805" y="395" text-anchor="middle" font-size="9" fill="#c4b5fd">Claude does ALL compliance analysis</text>
+  <line x1="805" y1="396" x2="805" y2="424" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 5b: Server Word Count Override -->
+  <rect x="680" y="424" width="250" height="108" rx="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+  <text x="805" y="444" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 5b: Word Count Override</text>
+  <text x="805" y="460" text-anchor="middle" font-size="10" fill="#d1fae5">countWords() on extracted_text.abstract</text>
+  <text x="805" y="475" text-anchor="middle" font-size="10" fill="#d1fae5">→ overwrites Claude abstract count</text>
+  <text x="805" y="490" text-anchor="middle" font-size="10" fill="#d1fae5">countWords() on extracted_text.significance</text>
+  <text x="805" y="505" text-anchor="middle" font-size="10" fill="#d1fae5">→ overwrites (defaults to 0 if absent)</text>
+  <text x="805" y="520" text-anchor="middle" font-size="10" fill="#d1fae5">Body count preserved from Claude</text>
+  <text x="805" y="534" text-anchor="middle" font-size="10" fill="#fef08a">⚙ Non-AI — overrides AI word counts</text>
+  <line x1="805" y1="532" x2="805" y2="560" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 6b: enforceChecks -->
+  <rect x="680" y="560" width="250" height="68" rx="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+  <text x="805" y="580" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 6b: enforceChecks()</text>
+  <text x="805" y="596" text-anchor="middle" font-size="10" fill="#d1fae5">Inject not_applicable for any missing checks</text>
+  <text x="805" y="611" text-anchor="middle" font-size="10" fill="#d1fae5">Sort into canonical 30-check order</text>
+  <text x="805" y="626" text-anchor="middle" font-size="10" fill="#fef08a">⚙ Non-AI</text>
+
+  <!-- Merge both branches -->
+  <line x1="175" y1="774" x2="175" y2="860" stroke="#475569" stroke-width="2"/>
+  <line x1="175" y1="860" x2="490" y2="860" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="805" y1="628" x2="805" y2="860" stroke="#475569" stroke-width="2"/>
+  <line x1="805" y1="860" x2="490" y2="860" stroke="#475569" stroke-width="2"/>
+
+  <!-- Step 8: JSON Response -->
+  <rect x="330" y="875" width="320" height="65" rx="8" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="490" y="898" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 8: JSON Response to Frontend</text>
+  <text x="490" y="914" text-anchor="middle" font-size="10" fill="#bfdbfe">Backend returns structured report</text>
+  <text x="490" y="929" text-anchor="middle" font-size="10" fill="#bfdbfe">File buffer discarded from memory</text>
+  <line x1="490" y1="940" x2="490" y2="968" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Step 9: Render -->
+  <rect x="330" y="968" width="320" height="85" rx="8" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="490" y="990" text-anchor="middle" font-size="12" font-weight="bold" fill="white">STEP 9: Report Rendered</text>
+  <text x="490" y="1006" text-anchor="middle" font-size="10" fill="#bfdbfe">Overall pass/fail badge + summary</text>
+  <text x="490" y="1021" text-anchor="middle" font-size="10" fill="#bfdbfe">Word count tiles (Abstract / Sig Stmt / Body)</text>
+  <text x="490" y="1036" text-anchor="middle" font-size="10" fill="#bfdbfe">Abstract Text Counted panel (PDF only)</text>
+  <text x="490" y="1051" text-anchor="middle" font-size="10" fill="#bfdbfe">30-check compliance table with ✅ ❌ ⚠️ —</text>
+
+  <!-- ===== LEGEND ===== -->
+  <rect x="50" y="1080" width="880" height="130" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="490" y="1105" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">Legend</text>
+
+  <rect x="90" y="1118" width="16" height="16" rx="3" fill="#8b5cf6"/>
+  <text x="114" y="1131" font-size="11" fill="#0f172a">AI Step — Claude claude-opus-4-5 via Anthropic API</text>
+
+  <rect x="90" y="1144" width="16" height="16" rx="3" fill="#10b981"/>
+  <text x="114" y="1157" font-size="11" fill="#0f172a">Non-AI / Deterministic Step (JSZip, Regex, countWords, enforceChecks, applyDocxOverrides)</text>
+
+  <rect x="90" y="1170" width="16" height="16" rx="3" fill="#3b82f6"/>
+  <text x="114" y="1183" font-size="11" fill="#0f172a">Frontend / Transport Step</text>
+
+  <rect x="500" y="1118" width="16" height="16" rx="3" fill="#f59e0b"/>
+  <text x="524" y="1131" font-size="11" fill="#0f172a">Decision / Branch Point</text>
+
+  <text x="500" y="1157" font-size="11" fill="#0f172a">DOCX: 12 checks explicitly confirmed (Non-AI)</text>
+  <text x="500" y="1177" font-size="11" fill="#0f172a">PDF: 2 checks explicitly confirmed (word counts)</text>
+
+  <!-- ===== PRIVACY ===== -->
+  <rect x="50" y="1230" width="880" height="155" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+  <text x="490" y="1255" text-anchor="middle" font-size="13" font-weight="bold" fill="#991b1b">Data Privacy Guarantees</text>
+  <text x="80" y="1277" font-size="11" fill="#7f1d1d">🔒  Anthropic API does not use submitted data to train AI models by default (API usage policy)</text>
+  <text x="80" y="1297" font-size="11" fill="#7f1d1d">🔒  Files are held in server memory only for the duration of the request — never written to disk, cloud storage, or any database</text>
+  <text x="80" y="1317" font-size="11" fill="#7f1d1d">🔒  No conversation history, session memory, or cross-request content caching — each call is fully stateless</text>
+  <text x="80" y="1337" font-size="11" fill="#7f1d1d">🔒  For .docx files, 12 checks are resolved server-side before Claude is called — reducing manuscript data sent to the API</text>
+  <text x="80" y="1357" font-size="11" fill="#7f1d1d">🔒  Word count overrides ensure the most sensitive compliance checks are never dependent on AI output</text>
+  <text x="80" y="1377" font-size="11" fill="#7f1d1d">🔒  Frontend links to privacy.anthropic.com for independent verification</text>
+
+  <!-- ===== RAG ===== -->
+  <rect x="50" y="1405" width="880" height="75" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+  <text x="490" y="1428" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532d">RAG — Retrieval-Augmented Generation</text>
+  <text x="80" y="1450" font-size="11" fill="#166534">All 30 AMS requirements are injected into every Claude API call via the system prompt — Claude never relies on training memory for compliance rules.</text>
+  <text x="80" y="1468" font-size="11" fill="#166534">For .docx files, Claude is explicitly instructed to treat all XML/text-extracted metadata as ground truth and not override it with visual inference.</text>
+
+  <!-- ===== DOCX CHECK BREAKDOWN ===== -->
+  <rect x="50" y="1500" width="430" height="100" rx="8" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="265" y="1522" text-anchor="middle" font-size="12" font-weight="bold" fill="#4c1d95">.docx — What applyDocxOverrides() confirms (12 checks)</text>
+  <text x="70" y="1542" font-size="10" fill="#3730a3">abstract_length · significance_length · body_length · paragraph_breaks</text>
+  <text x="70" y="1558" font-size="10" fill="#3730a3">abstract_no_citations · data_availability · table_no_shading · tables_cited_order</text>
+  <text x="70" y="1574" font-size="10" fill="#3730a3">table_no_wrapping · figures_cited_order · figure_no_wrapping · appendix_figures</text>
+  <text x="70" y="1592" font-size="10" fill="#6d28d9">Remaining 18 checks: Claude adjudicates (10 hybrid using metadata facts, 8 pure inference)</text>
+
+  <!-- ===== PDF CHECK BREAKDOWN ===== -->
+  <rect x="500" y="1500" width="430" height="100" rx="8" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="715" y="1522" text-anchor="middle" font-size="12" font-weight="bold" fill="#4c1d95">.pdf — Server-side overrides (2 checks)</text>
+  <text x="520" y="1542" font-size="10" fill="#3730a3">abstract_length — Claude extracts text → server counts words → overwrites</text>
+  <text x="520" y="1558" font-size="10" fill="#3730a3">significance_length — same pipeline; defaults to 0 if section absent</text>
+  <text x="520" y="1574" font-size="10" fill="#3730a3">body_length — Claude's count preserved (no server-side extraction)</text>
+  <text x="520" y="1592" font-size="10" fill="#6d28d9">Remaining 27 checks: Claude adjudicates from rendered PDF</text>
+
+</svg>
